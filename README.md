@@ -1,4 +1,4 @@
-# `WinAppInventory-Toolkit`
+# `GetYourWinApp`
 
 ## 引言
 
@@ -14,7 +14,7 @@
 - 故事的起源：不久前，我想检查我的APP们是否都乖乖地待在 D 盘。于是，我打开了 windows 内置的`系统设置-应用`界面：里面对应用进行磁盘分区的功能，以及应用的完整度，不能说是差强人意，只能说是一坨🔟💩。
 - 故事的开始：考虑到熟悉 Windows 应用管理的人大多会通过访问`shell:AppsFolder`虚拟视界来查看和管理应用。于是，此项目诞生了。
 
-`WinAppInventory-Toolkit` 是一个极其简易但是好用的工具，旨在**深度扫描、提取并可视化 Windows 系统中安装的所有应用程序**（包括 UWP 应用、传统可执行程序、系统快捷方式导向应用、Shell 命令导向应用、URL web document 导向应用，等等各种 APP），并为用户提供可视化的列表，展示所有已安装程序的各方面信息。
+`GetYourWinApp`是一个极其简易但是好用的 WinAppInventory 工具，旨在**深度扫描、提取并可视化 Windows 系统中安装的所有应用程序**（包括 UWP 应用、传统可执行程序、系统快捷方式导向应用、Shell 命令导向应用、URL web document 导向应用，等等各种 APP），并为用户提供可视化的列表，展示所有已安装程序的各方面信息。
 
 ## 🚀 核心功能
 
@@ -58,7 +58,7 @@
 1. 下载 inventory.ps1 脚本到本地（或使用提供的可执行程序）。
 2. 以管理员权限运行 PowerShell，导向到脚本所在地。
 3. 设置执行策略：`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`。
-4. 执行脚本：`.\inventory.ps1`。
+4. 执行脚本：`.\GetYourWinApp.ps1`。
 5. 等待执行完成，约 10-20 sec(可执行文件执行完成后，会启动窗口供用户确认). 
 6. 查收您的内容：脚本或可执行程序会在当前目录下生成 `app_list.html` `app_list.csv` 和 `/app_icons`。
 
