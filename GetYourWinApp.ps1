@@ -15,22 +15,22 @@ if (-not (Test-Path -LiteralPath $iconDir)) {
 }
 
 foreach ($item in $appsFolder.Items()) {
-    # Write-Host "`n=================================================="
-    # Write-Host "App : $($item.Name)" -ForegroundColor Cyan
+    Write-Host "`n=================================================="
+    Write-Host "App : $($item.Name)" -ForegroundColor Cyan
 
     $entry = [PSCustomObject][ordered]@{
         "No."       = ""
         Icon        = ""
         AppName     = $item.Name
-        Location    = "---"
         Type        = "---"
-        Target      = "---"
+        Location    = "---"
+        SizeMB      = "---"
         Desc        = "---"
         ProductName = "---"   
-        SizeMB      = "---"
         create_time = "---"   
         fix_time    = "---"   
         visit_time  = "---"   
+        Target      = "---"
     }
     $entry."No." = $index++
 
@@ -57,7 +57,7 @@ foreach ($item in $appsFolder.Items()) {
 
         if (-not $target -or $target -eq "") {
             $results += $entry
-            # Write-Host "Info: System/UWP App (no file location)" -ForegroundColor Gray
+            Write-Host "Info: System/UWP App (no file location)" -ForegroundColor Gray
             continue
         }
 
@@ -81,29 +81,29 @@ foreach ($item in $appsFolder.Items()) {
                     $extractedScript = $testPath
                 }
             }
-            # Write-Host "Type   : Shell Command (Intercepted!)" -ForegroundColor DarkYellow
-            # Write-Host "Command: $($entry.Location)" -ForegroundColor DarkYellow
+            Write-Host "Type   : Shell Command (Intercepted!)" -ForegroundColor DarkYellow
+            Write-Host "Command: $($entry.Location)" -ForegroundColor DarkYellow
         }
         elseif ($target -match "(?i)\.lnk$") {
             $lnk = $shell.CreateShortcut($target)
             if ($lnk.TargetPath -match "^(https?|file)://") {
                 $entry.Type = "URL"
                 $entry.Target = $lnk.TargetPath
-                # Write-Host "Type   : URL" -ForegroundColor Cyan
-                # Write-Host "Target : $($entry.Target)"
+                Write-Host "Type   : URL" -ForegroundColor Cyan
+                Write-Host "Target : $($entry.Target)"
             } else {
                 $entry.Type = "Shortcut"
                 $entry.Target = $lnk.TargetPath
                 $entry.Location = $target
-                # Write-Host "Type   : Shortcut" -ForegroundColor Yellow
-                # Write-Host "Target : $($lnk.TargetPath)"
+                Write-Host "Type   : Shortcut" -ForegroundColor Yellow
+                Write-Host "Target : $($lnk.TargetPath)"
             }
         }
         elseif ($target -match "(?i)\.exe$") {
             $entry.Type = "Executable"
             $entry.Location = $target
-            # Write-Host "Type   : Executable" -ForegroundColor Magenta
-            # Write-Host "Location: $target" -ForegroundColor Green
+            Write-Host "Type   : Executable" -ForegroundColor Magenta
+            Write-Host "Location: $target" -ForegroundColor Green
         }
         elseif ($target -match "(?i)\.url$") {
             $entry.Type = "URL"
@@ -112,21 +112,21 @@ foreach ($item in $appsFolder.Items()) {
             if ($urlContent -match '(?i)URL\s*=\s*([^\r\n]+)') {
                 $entry.Target = $matches[1].Trim()
             }
-            # Write-Host "Type   : URL" -ForegroundColor Cyan
-            # Write-Host "Target : $($entry.Target)"
+            Write-Host "Type   : URL" -ForegroundColor Cyan
+            Write-Host "Target : $($entry.Target)"
         }
         elseif ($target -match "(?i)\.(bat|cmd)$") {
             $entry.Type = "bat-Script"
             $entry.Location = $target
-            # Write-Host "Type   : bat-Script" -ForegroundColor Green
-            # Write-Host "Location: $target" -ForegroundColor Green
+            Write-Host "Type   : bat-Script" -ForegroundColor Green
+            Write-Host "Location: $target" -ForegroundColor Green
         }
         elseif ($target -match "^(https?|file)://") {
             $entry.Type = "URL"
             $entry.Target = $target
             $entry.Location = $target
-            # Write-Host "Type   : URL (Direct Link)" -ForegroundColor Cyan
-            # Write-Host "Target : $target"
+            Write-Host "Type   : URL (Direct Link)" -ForegroundColor Cyan
+            Write-Host "Target : $target"
         }
         elseif ($target -match "(?i)\.html?$") {
             $entry.Type = "URL"
@@ -140,23 +140,23 @@ foreach ($item in $appsFolder.Items()) {
                     $entry.Target = $matches[1].Trim()
                 }
             }
-            # Write-Host "Type   : URL (Local Web Document)" -ForegroundColor Cyan
-            # Write-Host "Target : $($entry.Target)"
-            # Write-Host "Location: $target" -ForegroundColor Green
+            Write-Host "Type   : URL (Local Web Document)" -ForegroundColor Cyan
+            Write-Host "Target : $($entry.Target)"
+            Write-Host "Location: $target" -ForegroundColor Green
         }
         else {
             $entry.Type = "Other"
             $entry.Location = $target
-            # Write-Host "Type   : Other" -ForegroundColor Gray
-            # Write-Host "Location: $target" -ForegroundColor Green
+            Write-Host "Type   : Other" -ForegroundColor Gray
+            Write-Host "Location: $target" -ForegroundColor Green
         }
 
-        $finalTarget = if ($entry.Type -eq "Shell Command") {
-                           if ($extractedScript -match "(?i)\.exe$") { $extractedScript } else { $null }
-                       } 
-                       elseif ($entry.Target -and ($entry.Target -match "(?i)\.exe$")) { $entry.Target } 
-                       elseif ($target -match "(?i)\.exe$") { $target }
-                       else { $null }
+        $finalTarget = if ($entry.Type -eq "Executable") {
+            if ($target -match '^(?<path>.*\.exe)(?:\s.*)?$') {
+                $Matches['path'].Trim('"').Trim()
+            } else {
+            $target }
+        } else { $null }
 
         if ($finalTarget -and (Test-Path -LiteralPath $finalTarget -ErrorAction SilentlyContinue)) {
             $fileInfo = Get-Item -LiteralPath $finalTarget
@@ -195,7 +195,7 @@ foreach ($item in $appsFolder.Items()) {
 
         if (-not $timeTarget -and ($item.Path -and (Test-Path -LiteralPath $item.Path -PathType Leaf -ErrorAction SilentlyContinue))) {
             $timeTarget = $item.Path
-            # Write-Host "Time   : Fallback to shortcut file ($item.Path)" -ForegroundColor DarkGray
+            Write-Host "Time   : Fallback to shortcut file ($item.Path)" -ForegroundColor DarkGray
         }
 
         if ($timeTarget -and (Test-Path -LiteralPath $timeTarget -ErrorAction SilentlyContinue)) {
@@ -216,7 +216,7 @@ foreach ($item in $appsFolder.Items()) {
             $entry.create_time = $specialMsg
             $entry.fix_time    = $specialMsg
             $entry.visit_time  = $specialMsg
-            # Write-Host "Time   : $specialMsg" -ForegroundColor Gray
+            Write-Host "Time   : $specialMsg" -ForegroundColor Gray
         }
 
          if ($entry.create_time -eq "---") {
@@ -296,7 +296,7 @@ foreach ($item in $appsFolder.Items()) {
     }
     catch {
         $entry.Target = $_.Exception.Message
-        # Write-Host "Error  : $_" -ForegroundColor Red
+        Write-Host "Error  : $_" -ForegroundColor Red
     }
 
     $results += $entry
@@ -304,47 +304,72 @@ foreach ($item in $appsFolder.Items()) {
 
 # ====================================================================
 # ====================================================================
-$results | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
+$getWeight = {
+    param($loc)
+    if ($loc -like "*D:*") { return 3 }      
+    if ($loc -like "*https://*") { return 2 } 
+    if ($loc -like "*C:*") { return 1 }     
+    return 0                               
+}
 
+$sortedResults = $results | Sort-Object { & $getWeight $_.Location }, Location 
+
+$finalCounter = 1
+foreach ($row in $sortedResults) { $row."No." = $finalCounter++ }
+
+$sortedResults | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
+
+# ====================================================================
+# ====================================================================
 $htmlHeader = @"
 <style>
 table { border-collapse:collapse; width:100%; font-family:Microsoft YaHei, sans-serif; }
 td { padding:8px; border:1px solid #ccc; text-align: left; vertical-align: middle; white-space: nowrap; }
 th { padding:8px; border:1px solid #ccc; background-color:#f4f4f4; text-align: left; font-weight: bold; white-space: nowrap; } 
 img { border-radius: 4px; }
+
+.section-split-line td {
+    border-top: 6px solid red !important;
+}
 </style>
 <table>
 "@
 
 $htmlHeader | Out-File $htmlPath -Encoding UTF8
 
-if ($results.Count -gt 0) {
-    $ths = ($results[0].PSObject.Properties | ForEach-Object { "<th>$($_.Name)</th>" }) -join ''
-    "<tr>$ths</tr>" | Out-File $htmlPath -Encoding UTF8 -Append
+if ($sortedResults.Count -gt 0) {
+    $ths = ($sortedResults[0].PSObject.Properties | ForEach-Object { "<th>$($_.Name)</th>" }) -join ''
+    "<thead><tr>$ths</tr></thead>" | Out-File $htmlPath -Encoding UTF8 -Append
 }
 
-foreach ($row in $results) {
+$lastWeight = -1 
+
+foreach ($row in $sortedResults) {
+    $currentWeight = & $getWeight $row.Location
+    
+    $trClass = ""
+    if ($lastWeight -eq 0 -and $currentWeight -eq 1) { 
+        $trClass = " class='section-split-line'" 
+    }
+    if ($lastWeight -eq 2 -and $currentWeight -eq 3) { 
+        $trClass = " class='section-split-line'" 
+    }
+
     $tds = ($row.PSObject.Properties | ForEach-Object { 
         if ($_.Name -eq "Icon") {
-            if ($_.Value) {
-                "<td><img src='$($_.Value)' width='32' height='32'/></td>"
-            } else {
-                "<td></td>"
-            }
+            if ($_.Value) { "<td><img src='$($_.Value)' width='32' height='32'/></td>" } else { "<td></td>" }
         } else {
             $safeValue = [string]$_.Value -replace '<', '&lt;' -replace '>', '&gt;'
             "<td>$safeValue</td>" 
         }
     }) -join ''
     
-    "<tr>$tds</tr>" | Out-File $htmlPath -Encoding UTF8 -Append
+    "<tr$trClass>$tds</tr>" | Out-File $htmlPath -Encoding UTF8 -Append
+
+    $lastWeight = $currentWeight
 }
 
 "</table>" | Out-File $htmlPath -Encoding UTF8 -Append
 
-
-Write-Host "ok!!!" -ForegroundColor Green
-# Write-Host "CSV  : $csvPath"
-# Write-Host "HTML : $htmlPath" -ForegroundColor Green
-# Write-Host "Icons: $iconDir folder" -ForegroundColor Green
-# perfect version 350 line
+Write-Host "all ok" -ForegroundColor Green
+# perfect version with 375 line
